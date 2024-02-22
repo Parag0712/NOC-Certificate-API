@@ -19,6 +19,7 @@ const generateAccessTokenAndRefreshToken = async (userId) => {
     }
 }
 
+// Validate Field
 function validateField(value, fieldName, res) {
     if (!value || value.trim() === "") {
         return res.status(400).json({ message: `${fieldName} is required` });
@@ -28,6 +29,7 @@ function validateField(value, fieldName, res) {
         return res.status(400).json({ message: `${fieldName} must be at least 6 characters` });
     }
 }
+
 
 //Register Function 
 export const register = asyncHandler(async (req, res) => {
@@ -85,7 +87,7 @@ export const register = asyncHandler(async (req, res) => {
         }, "User Register Successfully"));
 });
 
-
+// Login Function
 export const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
