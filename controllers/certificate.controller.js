@@ -120,6 +120,47 @@ export const registerCertificateReq = asyncHandler(async (req, res) => {
 
 
 // Admin update Status approve and reject 
+export const updateStateCertificate =asyncHandler(async(req,res)=>{
+    const certificateId = req.params.id;
+    
+    const loggedInUserId = req.user._id;
+    const {certificate_status} = req.body;
+    
+    
+    if (!certificate_status || certificate_status.trim() === "") {
+        return res.status(400).json({ message: `certificate_status is required` });
+    }
+
+    // Check if the certificate exists
+    const existingCertificate = await Certificate.findById(certificateId);
+    if (!existingCertificate) {
+        return res.status(404).json({ message: "Certificate not found" });
+    }
+
+    const updatedCertificate = await Certificate.findByIdAndUpdate(
+        certificateId,
+        {
+            $set:{
+                certificate_status,     
+                adminAssociate: loggedInUserId
+            },
+        },
+        {new:true}
+    )
+    
+    
+    if (!updatedCertificate) {
+        return res.status(500).json(
+            { message: "Something went wrong while update the certificate" }
+        )
+    }
+
+    return res
+        .status(201)
+        .json(new ApiResponse(201, {
+            certificate: updatedCertificate,
+        }, "Certificate updated Successfully"));
+})
 
 // Delete Certificate Request
 
