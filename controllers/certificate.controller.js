@@ -123,4 +123,3 @@ export const registerCertificateReq = asyncHandler(async (req, res) => {
 
 // Delete Certificate Request
 
-// 
