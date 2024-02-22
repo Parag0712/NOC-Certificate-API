@@ -4,17 +4,17 @@ const { Schema, model } = mongoose;
 
 // Subdocument schema for HR details
 const hrSchema = new Schema({
-    name: {
+    hr_name: {
         type: String,
         trim: true,
         required: true
     },
-    email: {
+    hr_email: {
         type: String,
         trim: true,
         required: true
     },
-    phoneNo: {
+    hr_phoneNo: {
         type: String,
         trim: true,
         required: true
@@ -23,12 +23,54 @@ const hrSchema = new Schema({
 
 // Subdocument schema for Company details
 const companySchema = new Schema({
-    name: {
+    company_name: {
         type: String,
         trim: true,
         required: true
     },
-    location: {
+    company_location: {
+        type: String,
+        trim: true,
+        required: true
+    }
+});
+
+// Subdocument schema for Student details
+const studentSchema = new Schema({
+    student_id: {
+        type: String,
+        trim: true,
+        required: true
+    },
+    student_name: {
+        type: String,
+        trim: true,
+        required: true
+    },
+    student_sem: {
+        type: Number,
+        required: true
+    },
+    student_email: {
+        type: String,
+        trim: true,
+        required: true
+    },
+    student_phoneNo: {
+        type: String,
+        trim: true,
+        required: true
+    }
+});
+
+// Subdocument schema for College details
+const collegeSchema = new Schema({
+    college_name: {
+        type: String,
+        trim: true,
+        required: true
+    },
+    college_branch: {
         type: String,
         trim: true,
         required: true
@@ -37,29 +79,8 @@ const companySchema = new Schema({
 
 const certificateSchema = new Schema(
     {
-        student_id: {
-            type: String,
-            trim: true,
-            required: true
-        },
-        student_name: {
-            type: String,
-            trim: true,
-            required: true
-        },
-        student_sem: {
-            type: Number,
-            trim: true,
-            required: true
-        },
-        student_email: {
-            type: String,
-            trim: true,
-            required: true
-        },
-        student_phoneNo: {
-            type: Number,
-            trim: true,
+        student: {
+            type: studentSchema,
             required: true
         },
         hr: {
@@ -70,20 +91,13 @@ const certificateSchema = new Schema(
             type: companySchema,
             required: true
         },
-        college_name: {
-            type: String,
-            trim: true,
-            required: true
-        },
-        college_branch: {
-            type: String,
-            trim: true,
+        college: {
+            type: collegeSchema,
             required: true
         },
         certificate_status: {
             type: Boolean,
-            required: true,
-            trim: true
+            required: true
         },
         internship_starting_date: {
             type: Date,
