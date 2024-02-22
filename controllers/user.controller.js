@@ -1,7 +1,9 @@
 import { User } from "../model/user.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import vine, { errors } from "@vinejs/vine";
 import ApiResponse from "../utils/ApiResponse.js";
+import fs from 'fs';
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
+import ApiError from "../utils/ApiError.js";
 
 // GenerateAccess Token Refresh Token
 const generateAccessTokenAndRefreshToken = async (userId) => {
@@ -29,6 +31,16 @@ function validateField(value, fieldName, res) {
         return res.status(400).json({ message: `${fieldName} must be at least 6 characters` });
     }
 }
+function validateFile(avatarLocalPath, mb) {
+    const avatarStats = fs.statSync(avatarLocalPath);
+    const fileSizeInBytes = avatarStats.size;
+    const fileSizeInMegabytes = fileSizeInBytes / (1024 * 1024);
+    const maxFileSizeInMegabytes = mb;
+    if (fileSizeInMegabytes > maxFileSizeInMegabytes) {
+        return res.status(400).json(`Avatar file exceeds the maximum size of ${mb}MB`)
+    }
+}
+
 
 
 //Register Function 
@@ -179,14 +191,14 @@ export const getAllUser = asyncHandler(async (req, res) => {
 // ForgetPassword
 export const ForgetPassword = asyncHandler(async (req, res, next) => {
     const { newPassword, password } = req.body;
-    validateField(password,"password",res);
-    validateField(newPassword,"password",res);
-    
+    validateField(password, "password", res);
+    validateField(newPassword, "password", res);
+
     const user = await User.findById(req.user?._id);
     const isPasswordValid = await user.isPasswordCorrect(password);
 
     if (!isPasswordValid) {
-        
+
         return res.status(400).json(
             { message: "Invalid old password" }
         )
@@ -200,23 +212,127 @@ export const ForgetPassword = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(200, {}, "Password changed successfully"))
 });
 
-// Delete User Account
-export const deleteUser = asyncHandler(async (req, res) => {
-        const id = req.body?.id || req?.user?._id;
-        if(!id || id === ""){
-            return res.status(400).json(new ApiResponse(400, {}, "id not valid"));
-        }
-        
-        const user = await User.findByIdAndDelete(id);
-        if (!user) {
-            return res.status(404).json(new ApiResponse(404, {user}, "User not found"));
-        }
 
+// updateAccountDetails
+export const updateAccountDetails = asyncHandler(async (req, res) => {
+    const { lastName, firstName, password } = req.body;
+    validateField(firstName, "firstName", res);
+    validateField(lastName, "lastName", res);
+    validateField(password, "password", res);
+
+    console.log(req.file.path);
+    const avatarLocalPath = await req.file.path;
+    if (!avatarLocalPath) {
+        return res.status(400).json({ message: "Profile Image is required" })
+    }
+    console.log(avatarLocalPath);
+    
+    validateFile(avatarLocalPath, "10")
+
+    // Check User Exits or not
+    const user = await User.findOne({ _id: req.user._id });
+    const oldImgId = user.profileImage;
+
+    // if not exist in database then send error
+    if (!user) { return res.status(404).json({ message: "User does Not Exist" }) }
+
+    const isPasswordValid = await user.isPasswordCorrect(password)
+
+    // Password valid or not 
+    if (!isPasswordValid) {
+        return res.status(401).json({ message: "Invalid user credentials" })
+    }
+    
+    // Upload Image on Cloudinary
+    const avatarImage = await uploadOnCloudinary(avatarLocalPath);
+    if (!avatarImage) {
+        return res.status(400).json({ message: "Error while uploading a avatar" })
+    }
+
+    try {
+        const user = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $set: {
+                    firstName: firstName,
+                    lastName: lastName,
+                    profileImage: {
+                        imgId: avatarImage.public_id,
+                        imgUrl: avatarImage.url
+                    }
+                }
+            },
+            {
+                new: true
+            }
+        ).select("-password -refreshToken");
+        if (oldImgId?.imgId) {
+            console.log("Delete");
+            const avatarImageDelete = await deleteFromCloudinary(oldImgId.imgId);
+        }
+        // Return Response
         return res
             .status(200)
             .json(
-                new ApiResponse(200, {}, "Account Deleted successfully")
+                new ApiResponse(200, { user }, "Account details updated successfully")
             )
+    } catch (error) {
+        throw new ApiError(401, error)
+    }
+});
+
+// Delete User Account
+export const deleteUser = asyncHandler(async (req, res) => {
+    const id = req.body?.id || req?.user?._id;
+    if (!id || id === "") {
+        return res.status(400).json(new ApiResponse(400, {}, "id not valid"));
+    }
+
+    const user = await User.findByIdAndDelete(id);
+    if (!user) {
+        return res.status(404).json(new ApiResponse(404, { user }, "User not found"));
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, {}, "Account Deleted successfully")
+        )
+});
+
+
+// Update isAdmin Field Function
+export const updateIsAdminField = asyncHandler(async (req, res) => {
+    const { userId, isAdmin } = req.body;
+
+    // Validate isAdmin field if necessary
+    // For example, if isAdmin can only be true or false, you can add validation here
+
+    try {
+        // Find the user by ID
+        const user = await User.findById(userId);
+
+        // If user doesn't exist, return 404 error
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Update isAdmin field
+        user.isAdmin = isAdmin;
+
+        // Save the updated user
+        const updatedUser = await user.save();
+
+        // Omit sensitive data from response
+        updatedUser.password = undefined;
+        updatedUser.refreshToken = undefined;
+
+        // Return success response
+        return res.status(200).json(new ApiResponse(200, { user: updatedUser }, "isAdmin field updated successfully"));
+    } catch (error) {
+        // Handle errors
+        return res.status(500).json({ message: "Failed to update isAdmin field", error });
+    }
 });
 
 
