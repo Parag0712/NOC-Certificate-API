@@ -129,3 +129,49 @@ export const login = asyncHandler(async (req, res) => {
             )
         )
 });
+
+// Logout Function
+export const logout = asyncHandler(async (req, res) => {
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: {
+                refreshToken: ""
+            }
+        },
+        {
+            new: true
+        }
+    );
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "User Logged Out"))
+});
+
+// Get User Data
+export const getCurrentUser = asyncHandler(async (req, res) => {
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, { user: req.user }, "User fetched successfully")
+        )
+});
+
+// Get All User Data
+export const getAllUser = asyncHandler(async (req, res) => {
+    const loggedInUserId = req.user._id;
+    const users = await User.find({ _id: { $ne: loggedInUserId }, isAdmin: false }); // Exclude the logged-in user
+
+    return res.status(200)
+        .json(
+            new ApiResponse(200, { users }, "All Users Fetched Successfully")
+        )
+});
