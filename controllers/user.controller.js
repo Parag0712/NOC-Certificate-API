@@ -200,7 +200,6 @@ export const ForgetPassword = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(200, {}, "Password changed successfully"))
 });
 
-
 // Delete User Account
 export const deleteUser = asyncHandler(async (req, res) => {
         const id = req.body?.id || req?.user?._id;

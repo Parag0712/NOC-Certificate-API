@@ -13,7 +13,7 @@ router.route("/forgotPassword").patch(verifyJWT,ForgetPassword);
 router.route("/forgotPassword").patch(verifyJWT,ForgetPassword);
 router.route("/deleteAccount").delete(verifyJWT,deleteUser);
 
-
+// Admin Verify
 router.route("/getAllUser").get(verifyAdmin,getAllUser);
 router.route("/deleteAnyAccount").delete(verifyAdmin,deleteUser);
 export default router
