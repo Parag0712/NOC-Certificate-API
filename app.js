@@ -31,6 +31,6 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/certificate", certificateRouter);
 
 app.get("/",(req,res)=>{
-    res.send("Server Created");
+    res.send("Server running");
 })
 
