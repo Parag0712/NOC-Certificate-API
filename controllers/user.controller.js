@@ -182,7 +182,6 @@ export const ForgetPassword = asyncHandler(async (req, res, next) => {
     validateField(password,"password",res);
     validateField(newPassword,"password",res);
     
-
     const user = await User.findById(req.user?._id);
     const isPasswordValid = await user.isPasswordCorrect(password);
 
@@ -200,4 +199,25 @@ export const ForgetPassword = asyncHandler(async (req, res, next) => {
         .status(200)
         .json(new ApiResponse(200, {}, "Password changed successfully"))
 });
+
+
+// Delete User Account
+export const deleteUser = asyncHandler(async (req, res) => {
+        const id = req.body?.id || req?.user?._id;
+        if(!id || id === ""){
+            return res.status(400).json(new ApiResponse(400, {}, "id not valid"));
+        }
+        
+        const user = await User.findByIdAndDelete(id);
+        if (!user) {
+            return res.status(404).json(new ApiResponse(404, {user}, "User not found"));
+        }
+
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(200, {}, "Account Deleted successfully")
+            )
+});
+
 
