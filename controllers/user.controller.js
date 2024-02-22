@@ -72,25 +72,58 @@ export const register = asyncHandler(async (req, res) => {
         httpOnly: true,
     }
 
-    const responseData = {
-        user: user,
-        tokens: {
-            accessToken: accessToken,
-            refreshToken: refreshToken
-        }
-    };
-
-
     return res
         .status(201)
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", refreshToken, options)
-        .json(new ApiResponse(201, responseData, "User Register Successfully"));
+        .json(new ApiResponse(201, {
+            user: user,
+            tokens: {
+                accessToken: accessToken,
+                refreshToken: refreshToken
+            }
+        }, "User Register Successfully"));
 });
 
 
 export const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
-    
-})
+    validateField(email, "email", res);
+    validateField(password, "password", res);
+
+    const user = await User.findOne({ email: email });
+
+    // if not exist in database then send error
+    if (!user) { return res.status(404).json({ message: "User does Not Exist" }) }
+
+    const isPasswordValid = await user.isPasswordCorrect(password)
+
+    // If Password Is wrong so send error
+    if (!isPasswordValid) {
+        return res.status(401).json({ message: "Invalid user credentials" })
+    }
+
+    const { accessToken, refreshToken } = await generateAccessTokenAndRefreshToken(user._id);
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+
+    //store in cookie 
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(200, {
+                user: loggedInUser,
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+            },
+                "User Logged In Successfully"
+            )
+        )
+});
