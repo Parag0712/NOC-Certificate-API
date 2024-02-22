@@ -114,7 +114,7 @@ export const registerCertificateReq = asyncHandler(async (req, res) => {
     return res
         .status(201)
         .json(new ApiResponse(201, {
-            user: newCertificate,
+            certificate: newCertificate,
         }, "Certificate Request Successfully"));
 });
 
@@ -123,3 +123,24 @@ export const registerCertificateReq = asyncHandler(async (req, res) => {
 
 // Delete Certificate Request
 
+export const deleteCertificateRequest = asyncHandler(async(req,res)=>{
+    const certificateId = req.params.id;
+
+    // Check if the certificate exists
+    const existingCertificate = await Certificate.findById(certificateId);
+    if (!existingCertificate) {
+        return res.status(404).json({ message: "Certificate not found" });
+    }
+
+    // Delete the certificate
+    await Certificate.findByIdAndDelete(certificateId);
+
+    // Optionally, perform additional actions after deletion (e.g., updating related data)
+
+    
+    return res
+        .status(201)
+        .json(new ApiResponse(201, {
+            certificate:'' ,
+        }, "Certificate deleted Successfully"));
+});
