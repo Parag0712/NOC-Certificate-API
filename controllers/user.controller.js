@@ -334,5 +334,3 @@ export const updateIsAdminField = asyncHandler(async (req, res) => {
         return res.status(500).json({ message: "Failed to update isAdmin field", error });
     }
 });
-
-

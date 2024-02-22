@@ -1,0 +1,126 @@
+import { Certificate } from "../model/certificate.model.js";
+import { User } from "../model/user.model.js";
+import ApiResponse from "../utils/ApiResponse.js";
+import asyncHandler from "../utils/asyncHandler.js";
+
+
+// Add Certificate Request
+export const registerCertificateReq = asyncHandler(async (req, res) => {
+    const loggedInUserId = req.user._id;
+    const {  
+        student_id,
+        student_name,
+        student_sem,
+        student_email,
+        student_phoneNo,
+        college_name,
+        college_branch,
+        company_name,
+        company_location,
+        hr_name,
+        hr_email,
+        hr_phoneNo,
+        certificate_status,
+        internship_starting_date,
+        internship_ending_date,
+    } = req.body;
+
+    // Define validation function
+    const validateField = (field) => {
+        if (!req.body[field]) {
+            res.status(400).json({  message: `${field} is required.` });
+            return false;
+        }
+        return true;
+    };
+
+    // Validate all required fields
+    const isValid = [
+        "student_id",
+        "student_name",
+        "student_sem",
+        "student_email",
+        "student_phoneNo",
+        "college_name",
+        "college_branch",
+        "company_name",
+        "company_location",
+        "hr_name",
+        "hr_email",
+        "hr_phoneNo",
+        "certificate_status",
+        "internship_starting_date",
+        "internship_ending_date",
+    ].every(validateField);
+    
+    if (!isValid) {
+        return;
+    }
+    const existingUser = await Certificate.findOne(
+        {
+            $or: [
+                { 'student.student_id': student_id },
+                { 'student.student_email': student_email }
+            ],
+            certificate_status: true
+        }
+    );
+    if (existingUser) {
+        return res.status(409).json({
+            message: "You cannot Resubmit Form"
+        })
+    }
+
+    // newCertificate
+    const newCertificate = await Certificate.create({
+        student: {
+            student_id,
+            student_name,
+            student_sem,
+            student_email,
+            student_phoneNo
+        },
+        college: {
+            college_name,
+            college_branch
+        },
+        company: {
+            company_name,
+            company_location
+        },
+        hr: {
+            hr_name,
+            hr_email,
+            hr_phoneNo
+        },
+        user:loggedInUserId,
+        certificate_status,
+        internship_starting_date,
+        internship_ending_date
+    });
+
+
+    const user = await User.findById(loggedInUserId);
+
+    user.certificateIssue.push(user);
+    await user.save();
+
+    if (!user) {
+        return res.status(500).json(
+            { message: "Something went wrong while registering the user" }
+        )
+    }
+
+    return res
+        .status(201)
+        .json(new ApiResponse(201, {
+            user: newCertificate,
+        }, "Certificate Request Successfully"));
+});
+
+
+// Admin update Status approve and reject 
+
+// Delete Certificate Request
+
+// 

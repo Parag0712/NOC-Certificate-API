@@ -97,7 +97,7 @@ const certificateSchema = new Schema(
         },
         certificate_status: {
             type: Boolean,
-            required: true
+            default:false
         },
         internship_starting_date: {
             type: Date,
@@ -110,7 +110,11 @@ const certificateSchema = new Schema(
         user: {
             type: Schema.Types.ObjectId,
             ref: 'User'
-        }
+        },
+        adminAssociate: [{
+            type: Schema.Types.ObjectId,
+            ref: 'User'
+        }]
     },
     { timestamps: true }
 );

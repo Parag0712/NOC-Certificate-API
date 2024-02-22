@@ -25,8 +25,10 @@ app.use(cookieParser());
 
 // Here User Routes 
 import userRouter from './routes/user.route.js';
+import certificateRouter from './routes/certificate.route.js';
 
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/certificate", certificateRouter);
 
 app.get("/",(req,res)=>{
     res.send("Server Created");
