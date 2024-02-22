@@ -175,3 +175,29 @@ export const getAllUser = asyncHandler(async (req, res) => {
             new ApiResponse(200, { users }, "All Users Fetched Successfully")
         )
 });
+
+// ForgetPassword
+export const ForgetPassword = asyncHandler(async (req, res, next) => {
+    const { newPassword, password } = req.body;
+    validateField(password,"password",res);
+    validateField(newPassword,"password",res);
+    
+
+    const user = await User.findById(req.user?._id);
+    const isPasswordValid = await user.isPasswordCorrect(password);
+
+    if (!isPasswordValid) {
+        
+        return res.status(400).json(
+            { message: "Invalid old password" }
+        )
+    }
+
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Password changed successfully"))
+});
+
