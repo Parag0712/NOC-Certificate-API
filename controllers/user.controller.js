@@ -189,7 +189,7 @@ export const getAllUser = asyncHandler(async (req, res) => {
 });
 
 // ForgetPassword
-export const ForgetPassword = asyncHandler(async (req, res, next) => {
+export const changePassword = asyncHandler(async (req, res, next) => {
     const { newPassword, password } = req.body;
     validateField(password, "password", res);
     validateField(newPassword, "password", res);

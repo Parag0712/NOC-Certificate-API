@@ -10,8 +10,7 @@ router.route("/register").post(register);
 router.route("/login").post(login);
 router.route("/logout").post(verifyJWT,logout);
 router.route("/getCurrentUser").get(getCurrentUser);
-router.route("/forgotPassword").patch(verifyJWT,ForgetPassword);
-router.route("/forgotPassword").patch(verifyJWT,ForgetPassword);
+router.route("/changePassword").patch(verifyJWT,changePassword);
 router.route("/deleteAccount").delete(verifyJWT,deleteUser);
 
 // Route UpdateProfile
