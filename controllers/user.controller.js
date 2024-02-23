@@ -4,6 +4,8 @@ import ApiResponse from "../utils/ApiResponse.js";
 import fs from 'fs';
 import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import ApiError from "../utils/ApiError.js";
+import { sendEmail } from "../utils/sendMail.js";
+
 
 // GenerateAccess Token Refresh Token
 const generateAccessTokenAndRefreshToken = async (userId) => {
@@ -333,4 +335,36 @@ export const updateIsAdminField = asyncHandler(async (req, res) => {
         // Handle errors
         return res.status(500).json({ message: "Failed to update isAdmin field", error });
     }
+});
+
+// Forget Password
+export const ForgetPassword = asyncHandler(async (req, res) => {
+    const {email} = req.body;
+    validateField(email, "email", res);
+    const user = await User.findOne({email:email});
+
+    if(!user){
+        return res.status(404).json({message:"User does Not Exist"})
+    }
+
+    const resetToken = await user.getResetToken();
+    
+    const url = `${process.env.FRONTEND_URL}/api/v1/users/resetpassword/${resetToken}`
+    const message = `Click on the link to reset your password ${url}. If you have not request then please change your password for security.`
+    console.log(message);
+    console.log(user.email);
+    
+    const ress=await sendEmail(user.email,"Noc Reset Password",message);
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, {}, `Reset Token has been send ${user.email}`)
+    )
+
+});
+
+// Reset Password
+export const ResetPassword = asyncHandler(async (req, res) => {
+
 });
