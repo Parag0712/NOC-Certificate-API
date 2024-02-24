@@ -13,7 +13,7 @@ router.route("/getCurrentUser").get(getCurrentUser);
 router.route("/changePassword").patch(verifyJWT,changePassword);
 router.route("/deleteAccount").delete(verifyJWT,deleteUser);
 router.route("/forgetPassword").post(ForgetPassword);
-router.route("/resetPassword").put(ResetPassword);
+router.route("/resetPassword/:token").put(ResetPassword);
 
 // Route UpdateProfile
 router.route("/updateProfile").patch(verifyJWT,upload.single("profileImage"),updateAccountDetails);

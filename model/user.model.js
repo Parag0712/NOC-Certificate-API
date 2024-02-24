@@ -40,10 +40,10 @@ const userSchema = new mongoose.Schema({
         default: false
     },
     refreshToken: {
-        type: String,
+        type: String, 
     },
-    ResetPasswordToken:String,
-    ResetPasswordExpire:String
+    resetPasswordToken:String,
+    resetPasswordExpire:String
 },
 { timestamps: true })
 
@@ -88,12 +88,10 @@ userSchema.methods.generateRefreshToken = function () {
         }
     )
 }
-
-// getResetToken
-userSchema.methods.getResetToken= function(){
-    const resetToken = crypto.randomBytes(20).toString("hex") 
-    this.ResetPasswordToken = crypto.createHash("sha256").update(resetToken).digest();
-    this.ResetPasswordExpire = Date.now() + 2 * 60 * 1000;
+userSchema.methods.getResetToken = function () {
+    const resetToken = crypto.randomBytes(20).toString("hex");
+    this.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    this.resetPasswordExpire = Date.now() + 6 * 60 * 1000; // 2 minutes expiration
     return resetToken;
 }
 export const User = mongoose.model("User",userSchema);

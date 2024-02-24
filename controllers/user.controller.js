@@ -5,7 +5,7 @@ import fs from 'fs';
 import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import ApiError from "../utils/ApiError.js";
 import { sendEmail } from "../utils/sendMail.js";
-
+import crypto from 'crypto'
 
 // GenerateAccess Token Refresh Token
 const generateAccessTokenAndRefreshToken = async (userId) => {
@@ -222,12 +222,10 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
     validateField(lastName, "lastName", res);
     validateField(password, "password", res);
 
-    console.log(req.file.path);
     const avatarLocalPath = await req.file.path;
     if (!avatarLocalPath) {
         return res.status(400).json({ message: "Profile Image is required" })
     }
-    console.log(avatarLocalPath);
     
     validateFile(avatarLocalPath, "10")
 
@@ -269,7 +267,6 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
             }
         ).select("-password -refreshToken");
         if (oldImgId?.imgId) {
-            console.log("Delete");
             const avatarImageDelete = await deleteFromCloudinary(oldImgId.imgId);
         }
         // Return Response
@@ -348,13 +345,12 @@ export const ForgetPassword = asyncHandler(async (req, res) => {
     }
 
     const resetToken = await user.getResetToken();
-    
+    await user.save();
     const url = `${process.env.FRONTEND_URL}/api/v1/users/resetpassword/${resetToken}`
     const message = `Click on the link to reset your password ${url}. If you have not request then please change your password for security.`
-    console.log(message);
-    console.log(user.email);
     
-    const ress=await sendEmail(user.email,"Noc Reset Password",message);
+    const ress= await sendEmail(user.email,"Noc Reset Password",message);
+
 
     return res
     .status(200)
@@ -366,5 +362,25 @@ export const ForgetPassword = asyncHandler(async (req, res) => {
 
 // Reset Password
 export const ResetPassword = asyncHandler(async (req, res) => {
+    const {token} = req.params;
+    const {password} = req.body;
+    validateField(password,"password",res)
+    const resetPasswordToken =crypto.createHash("sha256").update(token).digest("hex");
+    const user = await User.findOne({resetPasswordToken,resetPasswordExpire:{
+        $gt:Date.now(),
+    }});
+    if(!user){
+        return res.status(404).json({message:"User does Not Exist"})
+    }
 
+    user.password = password;
+    user.resetPasswordExpire=undefined;
+    user.resetPasswordToken=undefined;
+    await user.save();
+    
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, {}, `Your password changed successfully`)
+    )
 });
