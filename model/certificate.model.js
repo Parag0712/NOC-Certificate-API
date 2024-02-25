@@ -111,10 +111,6 @@ const certificateSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: 'User'
         },
-        adminAssociate: {
-            type: Schema.Types.ObjectId,
-            ref: 'User'
-        }
     },
     { timestamps: true }
 );

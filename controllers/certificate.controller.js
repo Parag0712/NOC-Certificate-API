@@ -7,7 +7,8 @@ import asyncHandler from "../utils/asyncHandler.js";
 // Add Certificate Request
 export const registerCertificateReq = asyncHandler(async (req, res) => {
     const loggedInUserId = req.user._id;
-    const {  
+    console.log(loggedInUserId);
+    const {
         student_id,
         student_name,
         student_sem,
@@ -28,7 +29,7 @@ export const registerCertificateReq = asyncHandler(async (req, res) => {
     // Define validation function
     const validateField = (field) => {
         if (!req.body[field]) {
-            res.status(400).json({  message: `${field} is required.` });
+            res.status(400).json({ message: `${field} is required.` });
             return false;
         }
         return true;
@@ -52,7 +53,7 @@ export const registerCertificateReq = asyncHandler(async (req, res) => {
         "internship_starting_date",
         "internship_ending_date",
     ].every(validateField);
-    
+
     if (!isValid) {
         return;
     }
@@ -93,7 +94,7 @@ export const registerCertificateReq = asyncHandler(async (req, res) => {
             hr_email,
             hr_phoneNo
         },
-        user:loggedInUserId,
+        user: loggedInUserId,
         certificate_status,
         internship_starting_date,
         internship_ending_date
@@ -102,7 +103,7 @@ export const registerCertificateReq = asyncHandler(async (req, res) => {
 
     const user = await User.findById(loggedInUserId);
 
-    user.certificateIssue.push(user);
+    user.certificateIssue.push(newCertificate._id);
     await user.save();
 
     if (!user) {
@@ -120,13 +121,13 @@ export const registerCertificateReq = asyncHandler(async (req, res) => {
 
 
 // Admin update Status approve and reject 
-export const updateStateCertificate =asyncHandler(async(req,res)=>{
+export const updateStateCertificate = asyncHandler(async (req, res) => {
     const certificateId = req.params.id;
-    
+
     const loggedInUserId = req.user._id;
-    const {certificate_status} = req.body;
-    
-    
+    const { certificate_status } = req.body;
+
+
     if (!certificate_status || certificate_status.trim() === "") {
         return res.status(400).json({ message: `certificate_status is required` });
     }
@@ -140,15 +141,15 @@ export const updateStateCertificate =asyncHandler(async(req,res)=>{
     const updatedCertificate = await Certificate.findByIdAndUpdate(
         certificateId,
         {
-            $set:{
-                certificate_status,     
+            $set: {
+                certificate_status,
                 adminAssociate: loggedInUserId
             },
         },
-        {new:true}
+        { new: true }
     )
-    
-    
+
+
     if (!updatedCertificate) {
         return res.status(500).json(
             { message: "Something went wrong while update the certificate" }
@@ -164,7 +165,7 @@ export const updateStateCertificate =asyncHandler(async(req,res)=>{
 
 // Delete Certificate Request
 
-export const deleteCertificateRequest = asyncHandler(async(req,res)=>{
+export const deleteCertificateRequest = asyncHandler(async (req, res) => {
     const certificateId = req.params.id;
 
     // Check if the certificate exists
@@ -178,10 +179,10 @@ export const deleteCertificateRequest = asyncHandler(async(req,res)=>{
 
     // Optionally, perform additional actions after deletion (e.g., updating related data)
 
-    
+
     return res
         .status(201)
         .json(new ApiResponse(201, {
-            certificate:'' ,
+            certificate: '',
         }, "Certificate deleted Successfully"));
 });
