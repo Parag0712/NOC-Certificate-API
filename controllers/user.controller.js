@@ -174,10 +174,17 @@ export const logout = asyncHandler(async (req, res) => {
 
 // Get User Data
 export const getCurrentUser = asyncHandler(async (req, res) => {
+
     return res
         .status(200)
         .json(
-            new ApiResponse(200, { user: req.user }, "User fetched successfully")
+            new ApiResponse(200, {
+                user: req.user,
+                tokens: {
+                    accessToken: req.aToken,
+                    refreshToken: req.rToken
+                }
+            }, "User fetched successfully")
         )
 });
 
@@ -224,12 +231,22 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
     validateField(lastName, "lastName", res);
     validateField(password, "password", res);
 
-    const avatarLocalPath = await req.file.path;
-    if (!avatarLocalPath) {
-        return res.status(400).json({ message: "Profile Image is required" })
+
+
+    console.log(req.file);
+    let avatarImage = {};
+    if (req.file) {
+
+        const avatarLocalPath = await req.file.path;
+        validateFile(avatarLocalPath, "10");
+
+        // Upload Image on Cloudinary
+        avatarImage = await uploadOnCloudinary(avatarLocalPath);
+        if (!avatarImage) {
+            return res.status(400).json({ message: "Error while uploading an avatar" });
+        }
     }
 
-    validateFile(avatarLocalPath, "10")
 
     // Check User Exits or not
     const user = await User.findOne({ _id: req.user._id });
@@ -245,29 +262,31 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
         return res.status(401).json({ message: "Invalid user credentials" })
     }
 
-    // Upload Image on Cloudinary
-    const avatarImage = await uploadOnCloudinary(avatarLocalPath);
-    if (!avatarImage) {
-        return res.status(400).json({ message: "Error while uploading a avatar" })
+    if (oldImgId?.imgId) {
+        const avatarImageDelete = await deleteFromCloudinary(oldImgId.imgId);
     }
 
     try {
-        const user = await User.findByIdAndUpdate(
+
+        const updateFields = {
+            firstName: firstName,
+            lastName: lastName,
+        };
+
+        // Add profileImage field if avatar was uploaded
+        if (req.file) {
+            updateFields.profileImage = {
+                imgId: avatarImage.public_id,
+                imgUrl: avatarImage.url
+            };
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
             req.user._id,
-            {
-                $set: {
-                    firstName: firstName,
-                    lastName: lastName,
-                    profileImage: {
-                        imgId: avatarImage.public_id,
-                        imgUrl: avatarImage.url
-                    }
-                }
-            },
-            {
-                new: true
-            }
-        ).select("-password -refreshToken");
+            { $set: updateFields },
+            { new: true }
+        ).select("-password");
+
         if (oldImgId?.imgId) {
             const avatarImageDelete = await deleteFromCloudinary(oldImgId.imgId);
         }
@@ -275,7 +294,7 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
         return res
             .status(200)
             .json(
-                new ApiResponse(200, { user }, "Account details updated successfully")
+                new ApiResponse(200, { updatedUser }, "Account details updated successfully")
             )
     } catch (error) {
         throw new ApiError(401, error)

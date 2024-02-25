@@ -9,7 +9,7 @@ const router = Router();
 router.route("/register").post(register);
 router.route("/login").post(login);
 router.route("/logout").post(verifyJWT,logout);
-router.route("/getCurrentUser").get(getCurrentUser);
+router.route("/getCurrentUser").get(verifyJWT,getCurrentUser);
 router.route("/changePassword").patch(verifyJWT,changePassword);
 router.route("/deleteAccount").delete(verifyJWT,deleteUser);
 router.route("/forgetPassword").post(ForgetPassword);
