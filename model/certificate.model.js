@@ -96,8 +96,8 @@ const certificateSchema = new Schema(
             required: true
         },
         certificate_status: {
-            type: Boolean,
-            default:false
+            type: String,
+            default:"pending"
         },
         internship_starting_date: {
             type: Date,

@@ -163,8 +163,8 @@ export const updateStateCertificate = asyncHandler(async (req, res) => {
         }, "Certificate updated Successfully"));
 })
 
-// Delete Certificate Request
 
+// Delete Certificate Request
 export const deleteCertificateRequest = asyncHandler(async (req, res) => {
     const certificateId = req.params.id;
 
