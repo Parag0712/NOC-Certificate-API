@@ -136,8 +136,10 @@ export const login = asyncHandler(async (req, res) => {
         .json(
             new ApiResponse(200, {
                 user: loggedInUser,
-                accessToken: accessToken,
-                refreshToken: refreshToken,
+                tokens: {
+                    accessToken: accessToken,
+                    refreshToken: refreshToken
+                }
             },
                 "User Logged In Successfully"
             )
@@ -226,7 +228,7 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
     if (!avatarLocalPath) {
         return res.status(400).json({ message: "Profile Image is required" })
     }
-    
+
     validateFile(avatarLocalPath, "10")
 
     // Check User Exits or not
@@ -242,7 +244,7 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
     if (!isPasswordValid) {
         return res.status(401).json({ message: "Invalid user credentials" })
     }
-    
+
     // Upload Image on Cloudinary
     const avatarImage = await uploadOnCloudinary(avatarLocalPath);
     if (!avatarImage) {
@@ -336,51 +338,53 @@ export const updateIsAdminField = asyncHandler(async (req, res) => {
 
 // Forget Password
 export const ForgetPassword = asyncHandler(async (req, res) => {
-    const {email} = req.body;
+    const { email } = req.body;
     validateField(email, "email", res);
-    const user = await User.findOne({email:email});
+    const user = await User.findOne({ email: email });
 
-    if(!user){
-        return res.status(404).json({message:"User does Not Exist"})
+    if (!user) {
+        return res.status(404).json({ message: "User does Not Exist" })
     }
 
     const resetToken = await user.getResetToken();
     await user.save();
     const url = `${process.env.FRONTEND_URL}/api/v1/users/resetpassword/${resetToken}`
     const message = `Click on the link to reset your password ${url}. If you have not request then please change your password for security.`
-    
-    const ress= await sendEmail(user.email,"Noc Reset Password",message);
+
+    const ress = await sendEmail(user.email, "Noc Reset Password", message);
 
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(200, {}, `Reset Token has been send ${user.email}`)
-    )
+        .status(200)
+        .json(
+            new ApiResponse(200, {}, `Reset Token has been send ${user.email}`)
+        )
 
 });
 
 // Reset Password
 export const ResetPassword = asyncHandler(async (req, res) => {
-    const {token} = req.params;
-    const {password} = req.body;
-    validateField(password,"password",res)
-    const resetPasswordToken =crypto.createHash("sha256").update(token).digest("hex");
-    const user = await User.findOne({resetPasswordToken,resetPasswordExpire:{
-        $gt:Date.now(),
-    }});
-    if(!user){
-        return res.status(404).json({message:"User does Not Exist"})
+    const { token } = req.params;
+    const { password } = req.body;
+    validateField(password, "password", res)
+    const resetPasswordToken = crypto.createHash("sha256").update(token).digest("hex");
+    const user = await User.findOne({
+        resetPasswordToken, resetPasswordExpire: {
+            $gt: Date.now(),
+        }
+    });
+    if (!user) {
+        return res.status(404).json({ message: "User does Not Exist" })
     }
 
     user.password = password;
-    user.resetPasswordExpire=undefined;
-    user.resetPasswordToken=undefined;
+    user.resetPasswordExpire = undefined;
+    user.resetPasswordToken = undefined;
     await user.save();
-    
+
     return res
-    .status(200)
-    .json(
-        new ApiResponse(200, {}, `Your password changed successfully`)
-    )
+        .status(200)
+        .json(
+            new ApiResponse(200, {}, `Your password changed successfully`)
+        )
 });
