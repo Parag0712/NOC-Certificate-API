@@ -43,8 +43,6 @@ function validateFile(avatarLocalPath, mb) {
     }
 }
 
-
-
 //Register Function 
 export const register = asyncHandler(async (req, res) => {
     const { email, password, isAdmin, firstName, lastName } = req.body;
@@ -55,7 +53,7 @@ export const register = asyncHandler(async (req, res) => {
     validateField(password, "password", res);
 
 
-    const existedUser = await User.findOne({ email: email });
+    const existedUser = await User.findOne({ email: email }).populate('certificateIssue');
 
     if (existedUser) {
         return res.status(409).json({
@@ -233,7 +231,6 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
 
 
 
-    console.log(req.file);
     let avatarImage = {};
     if (req.file) {
 

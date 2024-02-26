@@ -7,7 +7,6 @@ import asyncHandler from "../utils/asyncHandler.js";
 // Add Certificate Request
 export const registerCertificateReq = asyncHandler(async (req, res) => {
     const loggedInUserId = req.user._id;
-    console.log(loggedInUserId);
     const {
         student_id,
         student_name,
