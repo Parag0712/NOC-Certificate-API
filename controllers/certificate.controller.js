@@ -118,7 +118,15 @@ export const registerCertificateReq = asyncHandler(async (req, res) => {
         }, "Certificate Request Successfully"));
 });
 
-
+export const getAllCertificate = asyncHandler(async (req, res) => {
+    // Check if the certificate exists
+    const allCertificate = await Certificate.find();
+    return res
+        .status(201)
+        .json(new ApiResponse(201, {
+            certificate: allCertificate,
+        }, "Certificate fetched Successfully"));
+})
 // Admin update Status approve and reject 
 export const updateStateCertificate = asyncHandler(async (req, res) => {
     const certificateId = req.params.id;
