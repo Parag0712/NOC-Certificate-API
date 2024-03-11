@@ -39,6 +39,10 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    rootAdmin: {
+        type: Boolean,
+        default: false
+    },
     refreshToken: {
         type: String, 
     },
