@@ -189,7 +189,7 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 // Get All User Data
 export const getAllUser = asyncHandler(async (req, res) => {
     const loggedInUserId = req.user._id;
-    const users = await User.find({ _id: { $ne: loggedInUserId }, isAdmin: false }); // Exclude the logged-in user
+    const users = await User.find({ _id: { $ne: loggedInUserId } }); // Exclude the logged-in user
 
     return res.status(200)
         .json(
@@ -228,8 +228,6 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
     validateField(firstName, "firstName", res);
     validateField(lastName, "lastName", res);
     validateField(password, "password", res);
-
-
 
     let avatarImage = {};
     if (req.file) {
@@ -321,15 +319,11 @@ export const deleteUser = asyncHandler(async (req, res) => {
 // Update isAdmin Field Function
 export const updateIsAdminField = asyncHandler(async (req, res) => {
     const { userId, isAdmin } = req.body;
-
-    // Validate isAdmin field if necessary
-    // For example, if isAdmin can only be true or false, you can add validation here
-
+    validateField(userId);
+    validateField(isAdmin);
     try {
         // Find the user by ID
         const user = await User.findById(userId);
-
-        // If user doesn't exist, return 404 error
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -351,6 +345,7 @@ export const updateIsAdminField = asyncHandler(async (req, res) => {
         return res.status(500).json({ message: "Failed to update isAdmin field", error });
     }
 });
+
 
 // Forget Password
 export const ForgetPassword = asyncHandler(async (req, res) => {

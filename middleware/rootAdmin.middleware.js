@@ -6,7 +6,7 @@ import ApiError from '../utils/ApiError.js';
 
 
 // Using this function you get userId based on token
-const verifyAdmin = asyncHandler(async (req, res, next) => {
+const verifyRootAdmin = asyncHandler(async (req, res, next) => {
     try {
         // Get token from cookie
         const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer", "").trim();
@@ -25,7 +25,7 @@ const verifyAdmin = asyncHandler(async (req, res, next) => {
             throw new ApiError(401, "Invalid Access Token");
         }
 
-        if(user.isAdmin == false){
+        if(user.rootAdmin == false){
             throw new ApiError(401, "You can't Access This Data");
         }
         
@@ -37,4 +37,4 @@ const verifyAdmin = asyncHandler(async (req, res, next) => {
     }
 });
 
-export { verifyAdmin }
+export { verifyRootAdmin }
